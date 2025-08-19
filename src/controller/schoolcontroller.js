@@ -26,16 +26,30 @@ export  const getSchoolList=  async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 }
-export const postSchool=   async (req, res) => {
+export const postSchool = async (req, res) => {
   try {
     const { error, value } = addSchoolSchema.validate(req.body);
     if (error) return res.status(400).json({ error: error.details });
 
+    // Check if a school already exists with same name + address
+    const existing = await School.findOne({
+      where: {
+        name: value.name,
+        address: value.address,
+      },
+    });
+
+    if (existing) {
+      return res.status(400).json({ 
+        error: "School with same name and address already exists" 
+      });
+    }
+
     const school = await School.create(value);
     res.status(201).json({ status: "success", data: school });
+
   } catch (err) {
     console.error("addSchool error:", err);
     res.status(500).json({ error: "Server error" });
   }
-
-}
+};
